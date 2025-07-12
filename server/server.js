@@ -42,7 +42,29 @@ io.on('connection', (socket) => {
     io.emit('user_joined', { username, id: socket.id });
     console.log(`${username} joined the chat`);
   });
+// messageStore - Store for public and private messages
+  const messageStore = {
+    public: [],
+    private: {},
 
+    addPublic(message) {
+      this.public.push(message);
+      if (this.public.length > 100) this.public.shift();
+    },
+
+    addPrivate(senderId, recipientId, message) {
+      const key = [senderId, recipientId].sort().join('-');
+      if (!this.private[key]) this.private[key] = [];
+      this.private[key].push(message);
+      if (this.private[key].length > 100) this.private[key].shift();
+    },
+
+    getPrivateConversation(user1, user2) {
+      const key = [user1, user2].sort().join('-');
+      return this.private[key] || [];
+    }
+  };
+  
   // Handle chat messages
   socket.on('send_message', (messageData) => {
     const message = {
